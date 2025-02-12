@@ -2,24 +2,19 @@ import {model, Schema, Types} from "mongoose";
 import {toJSON} from "@reis/mongoose-to-json";
 
 const leaveBalanceSchema = new Schema({
-    employee: {type: Types.ObjectId, ref: "Employee"},
+    employeeId: {type: Types.ObjectId, ref: "Employee"},
+    year:{type: String},
     entitlement: {type:Number, required:true},
-    remainingDays: {type:Number, required: true },
-    createdDate: {type:date, default:Date.now },
-    modifiedAt: {type:date, default: Date.now },
-    createdBy:{type:Types.ObjectId, ref:'Employee'},
-    modifiedBy:{type:Types.ObjectId, ref:'Employee'}
+    daysAvailable: {type:Number, default: function() { return this.entitlement} },
+    daysUsed: {type:Number },
+    createdDate: {type:Date, default:Date.now },
+    modifiedAt: {type:Date, default: Date.now },
+    createdBy:{type:Types.ObjectId, ref:'UserAccount'},
+    modifiedBy:{type:Types.ObjectId, ref:'UserAccount'}
 
-}, {timestamps: true})
+})
 
   leaveBalanceSchema.plugin(toJSON);
   export const LeaveBalanceModel = model("LeaveBalance", leaveBalanceSchema);
   
-
-  //Middleware to update modifiedDate before saving
-//leaveBalanceSchema.pre("save", function (next) {
-    //this.modifiedDate = Date.now();
-    //next();
-  //});
-
 

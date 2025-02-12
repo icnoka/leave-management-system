@@ -15,16 +15,15 @@ console.log('Database is connected successfully')
 
 const definedRoles = async () => {
   try {
-    const roles = ["Employee", "HR Manager"].map(role => role.toLowerCase());
+    const roles = ["Employee", "HR Manager", "Line Manager" ].map(role => role.toLowerCase());
 
     for (const roleName of roles) {
       const existingRole = await RoleModel.findOne({ roleName });
       if (!existingRole) {
         await RoleModel.create({ roleName, description: `${roleName} role` });
-        console.log(`✅ Role '${roleName}' created`);
+        
       }
     }
-    console.log(" Roles seeding completed");
   } catch (error) {
     console.error(" Error seeding roles:", error);
   }

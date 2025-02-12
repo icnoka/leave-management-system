@@ -4,6 +4,7 @@ import { UserModel } from "../models/user_account.js";
 import { UserRoleModel } from "../models/user_role.js";
 import { RoleModel } from "../models/role.js";
 
+
 export const signup = async (req, res, next) => {
   try {
     const { username, password, roleName } = req.body;
@@ -11,12 +12,11 @@ export const signup = async (req, res, next) => {
     // Convert role to lowercase
     const roleLower = roleName.toLowerCase();
 
-      // Validate role
-      const validRoles = ["employee", "hr manager"];
-      if (!validRoles.includes(roleLower)) {
-        return res.status(400).json({ message: "Invalid role" });
-      }
-  
+    // Validate role
+    const validRoles = ["employee", "hr manager", "line manager"];
+    if (!validRoles.includes(roleLower)) {
+      return res.status(400).json({ message: "Invalid role" });
+    }
 
     // Check if user exists
     const existingUser = await UserModel.findOne({ username });
@@ -29,24 +29,27 @@ export const signup = async (req, res, next) => {
     const newUser = new UserModel({ username, password: hashedPassword });
     await newUser.save();
 
-    // Find the role by roleName
-    //const role = await RoleModel.findOne({ roleName });
-    //if (!role) return res.status(400).json({ message: "Invalid role" });
+    // Retrieve the role ID based on the role name
+    const role = await RoleModel.findOne({ roleName: roleLower }); // Adjust field name if necessary
+    if (!role) {
+      return res.status(400).json({ message: "Invalid role" });
+    }
 
-   // Assign role in UserRoleModel
-   const role = await RoleModel.findOne({ roleName: roleLower });
-   if (!role) return res.status(400).json({ message: "Role not found in database" });
-
+    // Create user role association
     const userRole = new UserRoleModel({ userId: newUser._id, roleId: role._id });
-   await userRole.save();
+    await userRole.save();
 
-    res.status(201).json({ message: "User registered successfully" });
+    res.status(201).json({
+      message: "User registered successfully",
+      username: newUser.username,
+      userAccountId: newUser._id,
+    });
 
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
-
+  
 // User login
 export const login = async (req, res, next) => {
   try {
@@ -62,6 +65,7 @@ export const login = async (req, res, next) => {
     }
 
     // Verify password
+    const MAX_ATTEMPTS = 3;
     const correctPassword = await bcrypt.compare(password, user.password);
     if (!correctPassword) {
       user.failedAttempts = (user.failedAttempts || 0) + 1;
@@ -79,16 +83,17 @@ export const login = async (req, res, next) => {
     await user.save();
 
     // Fetch user role
-    const userRole = await UserRoleModel.findOne({ userId: user._id }).populate("roleId");
+    const userRole = await UserRoleModel.findOne({ userId: user.id }).populate("roleId");
     if (!userRole) return res.status(403).json({ message: "No role assigned" });
 
     // Generate JWT token
     const token = jwt.sign(
-      { id: user._id, role: userRole.roleId.roleName },
+      { userId: user.id, role:userRole.roleId.roleName}, 
       
       process.env.JWT_PRIVATE_KEY,
       { expiresIn: "3h" }
     );
+   
 
     res.status(200).json({
       message: "Login successful",
@@ -104,27 +109,16 @@ export const login = async (req, res, next) => {
   }
 };
 
-//Get a user by their username
-/**export const getUser = async (req, res, next) => {
-  try {
-    const username = req.params.username.toLowerCase();
 
-  const options = { sort: { startDate: -1 } }
-  const userDetails = await UserModel.findOne({ username }).select("-password")
-    .populate({
-      path: "appointments",
-      options,
-    })
-    .populate("profile")
-    
+//function to log a user out
+export const logout = () => {
+  // Remove the JWT token from local storage or session storage
+  localStorage.removeItem('token'); // or sessionStorage.removeItem('token');
 
-  return res.status(200).json({ user: userDetails });
-  } catch (error) {
-  //  next()
-  console.log(error)
-  }
-};/** */
-
-export const logout = (req, res) => {
-  res.status(200).json({ message: "Logout successful" });
+   // Show a logout message
+   alert("You have been logged out successfully.");
+  
+  // Redirect to login page 
+  window.location.href = '/login';
 };
+ 

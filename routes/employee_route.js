@@ -1,10 +1,13 @@
 import { Router } from "express";
-import { isAuthenticated } from "../middlewares/auth.js";
-import { createEmployeeProfile } from "../controllers/employeeControllerr.js";
+import { isAuthenticated, hasRole} from "../middlewares/auth.js";
+import { createEmployeeProfile, getEmployeeById, updateEmployeeProfile } from "../controllers/employeeControllerr.js";
 
 
 const employeeRouter = Router();
 
-employeeRouter.post('/auth/employeeProfile', isAuthenticated, createEmployeeProfile);
+employeeRouter.patch('/employee/:employeeId',isAuthenticated, hasRole('HR'), updateEmployeeProfile);
+employeeRouter.get('/employee/:employeeId',isAuthenticated, getEmployeeById);
+employeeRouter.post('/employee',isAuthenticated, createEmployeeProfile);
+
 
 export default employeeRouter

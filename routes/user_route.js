@@ -1,13 +1,13 @@
 import { Router } from "express";
-import { isAuthenticated, authorizeRoles } from "../middlewares/auth.js";
+import { isAuthenticated} from "../middlewares/auth.js";
 import { signup, login, logout} from "../controllers/userController.js";
 
 
 const userRouter = Router();
 
-userRouter.post('/auth/signup', signup);
-userRouter.post('/auth/login', login);
-userRouter.post('/auth/logout', isAuthenticated, logout)
+userRouter.post('/signup', signup);
+userRouter.post('/login', login);
+userRouter.post('/logout', isAuthenticated, logout)
 
 export default userRouter
 

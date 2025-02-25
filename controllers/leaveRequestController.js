@@ -1,6 +1,7 @@
 import { LeaveModel } from "../models/leave_request.js";
 import { EmployeeModel } from "../models/employee.js";
 import { LeaveBalanceModel } from "../models/leave_balance.js";
+import { mailTransport } from "../config/mail.js";
 
 // Only Employees are allowed to create leave request
 export const createLeaveRequest = async (req, res, next) => {
@@ -19,11 +20,7 @@ export const createLeaveRequest = async (req, res, next) => {
     console.log(`No employee found for user ID: ${req.user.userId}`);
      return res.status(403).json({ message: "Only employees can submit leave requests" });
     }
-    /**let calculatedEndDate;
-    if (daysRequested && startDate) {
-      const calculatedEndDate = new Date(startDate);
-      calculatedEndDate.setDate(calculatedEndDate.getDate() + daysRequested - 1);
-  }**/
+  
 
     // Check for existing leave requests with the same details
     const existingRequest = await LeaveModel.findOne({
@@ -65,7 +62,7 @@ export const createLeaveRequest = async (req, res, next) => {
 export const deleteLeaveRequest = async (req, res, next) => {
   try {
      // Get the leave request ID from the URL parameters
-    const { leaveRequestId } = req.params;
+    const { leaveRequestId } = req.body;
 
     // Find and delete the leave request
     const leaveRequest = await LeaveModel.findByIdAndDelete(leaveRequestId);
@@ -83,10 +80,12 @@ export const deleteLeaveRequest = async (req, res, next) => {
 // Function to update a leave request
 export const updateLeaveRequest = async (req, res, next) => {
   try {
-    // Get the leave request ID from the URL parameters
-    const { leaveRequestId } = req.params; 
-     // Get the update data from the request body
-    const { leaveType, startDate, endDate, reason } = req.body;
+    // Get the leave request ID from the request body
+    const { leaveRequestId, leaveType, startDate, endDate, reason } = req.body;
+
+    if (!leaveRequestId) {
+      return res.status(400).json({ message: "Leave request ID is required in the request body." });
+    }
 
     // Find the leave request to update
     const leaveRequest = await LeaveModel.findById(leaveRequestId);
@@ -186,24 +185,32 @@ export const reviewLeaveRequest = async (req, res, next) => {
 
       // Set comments regardless of approval or rejection
       leaveRequest.comments = comments || "No comments provided";
-
-      // Update status based on approvals
       if (leaveRequest.isLinemanagerApproved && leaveRequest.isHrManagerApproved) {
-          leaveRequest.status = "Approved";
-      } else if (!leaveRequest.isLinemanagerApproved && !leaveRequest.isHrManagerApproved) {
-          leaveRequest.status = "Rejected"; // Both rejected
-      } else {
-          leaveRequest.status = "Pending"; // One approved, one rejected
-      }
+        leaveRequest.status = "Approved";
 
-      await leaveRequest.save();
-      res.status(200).json({ message: "Leave request processed successfully", leaveRequest });
+        // Send email when leave is approved
+        const employee = await EmployeeModel.findById(leaveRequest.employeeId);
+        if (employee && employee.email) {
+            await mailTransport.sendMail({
+                from: '"Mojo Payments Ltd"<noreply@mojopayments.com>',
+                to: employee.email,
+                subject: "Leave Request Approved",
+                text: `Dear ${employee.firstName},\n\nYour leave request for ${leaveRequest.daysRequested} days starting from ${leaveRequest.startDate} to ${leaveRequest.endDate} has been approved.\n\nBest regards,\nHR Manager`
+            });
+        }
+    } else if (!leaveRequest.isLinemanagerApproved && !leaveRequest.isHrManagerApproved) {
+        leaveRequest.status = "Rejected";
+    } else {
+        leaveRequest.status = "Pending";
+    }
 
-  } catch (error) {
-      next(error);
-  }
+    await leaveRequest.save();
+    res.status(200).json({ message: "Leave request processed successfully", leaveRequest });
+
+} catch (error) {
+    next(error);
+}
 };
-
 
 // Function to get a leave request by ID
 export const getLeaveRequest = async (req, res, next) => {

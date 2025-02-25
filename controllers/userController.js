@@ -7,7 +7,7 @@ import { RoleModel } from "../models/role.js";
 
 export const signup = async (req, res, next) => {
   try {
-    const { username, password, roleName } = req.body;
+    const { email, password, roleName } = req.body;
 
     // Convert role to lowercase
     const roleLower = roleName.toLowerCase();
@@ -19,14 +19,14 @@ export const signup = async (req, res, next) => {
     }
 
     // Check if user exists
-    const existingUser = await UserModel.findOne({ username });
-    if (existingUser) return res.status(400).json({ message: "Username already exists" });
+    const existingUser = await UserModel.findOne({ email });
+    if (existingUser) return res.status(400).json({ message: "User already exists" });
 
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 12);
 
     // Create new user
-    const newUser = new UserModel({ username, password: hashedPassword });
+    const newUser = new UserModel({ email, password: hashedPassword });
     await newUser.save();
 
     // Retrieve the role ID based on the role name
@@ -41,7 +41,7 @@ export const signup = async (req, res, next) => {
 
     res.status(201).json({
       message: "User registered successfully",
-      username: newUser.username,
+      email: newUser.email,
       userAccountId: newUser._id,
     });
 
@@ -53,10 +53,10 @@ export const signup = async (req, res, next) => {
 // User login
 export const login = async (req, res, next) => {
   try {
-    const { username, password } = req.body;
+    const { email, password } = req.body;
 
     // Find user
-    const user = await UserModel.findOne({ username });
+    const user = await UserModel.findOne({ email });
     if (!user) return res.status(401).json({ message: "Invalid credentials" });
 
     // Check if account is locked
@@ -99,7 +99,7 @@ export const login = async (req, res, next) => {
       message: "Login successful",
       accessToken: token,
       user: {
-        username: user.username,
+        eamil: user.email,
         role: userRole.roleId.roleName,
       },
     });

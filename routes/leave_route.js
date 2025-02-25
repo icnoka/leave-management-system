@@ -5,14 +5,14 @@ import { isAuthenticated} from "../middlewares/auth.js";
 const leaveRouter = Router();
 
 // Employees can submit leave requests
-leaveRouter.post("/leave", isAuthenticated, createLeaveRequest);
-leaveRouter.patch("/leave/:leaveRequestId", isAuthenticated,updateLeaveRequest);
-leaveRouter.delete("/leave/:leaveRequestId",isAuthenticated, deleteLeaveRequest);
-leaveRouter.get("/leave",isAuthenticated, getLeaveRequest);
+leaveRouter.post("/leaveRequest", isAuthenticated, createLeaveRequest);
+leaveRouter.patch("/leaveRequest", isAuthenticated,updateLeaveRequest);
+leaveRouter.delete("/leaveRequest",isAuthenticated, deleteLeaveRequest);
+leaveRouter.get("/leaveRequest",isAuthenticated, getLeaveRequest);
 
 
 // Route for approving leave requests, accessible only to HR and Line Managers
-leaveRouter.post('/leave/approve', isAuthenticated,  reviewLeaveRequest);
+leaveRouter.post('/leaveRequest/approve', isAuthenticated,  reviewLeaveRequest);
 
 
 

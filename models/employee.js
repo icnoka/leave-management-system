@@ -9,16 +9,26 @@ const employeeSchema = new Schema({
     mobile:{type:String },
     staffID: {type:String},
     jobTitle: {type:String},
-    leaveBalanceId:{type:Types.ObjectId, ref:'LeaveBalance'},
+    //leaves: [{ type: Types.ObjectId, ref: "LeaveRequest" }],
+    leaveBalanceId:{type:Types.ObjectId, ref:'LeaveBalances'},
+    userAccountId:{type:Types.ObjectId, ref:'UserAccounts'},
     createdDate: {type:Date, default:Date.now },
     modifiedAt: {type:Date, default: Date.now },
-    userAccountId:{type:Types.ObjectId, ref:'UserAccount'},
-    createdBy:{type:Types.ObjectId, ref:'UserAccount'},
-    modifiedBy:{type:Types.ObjectId, ref:'UserAccount'}
+    createdBy:{type:Types.ObjectId, ref:'UserAccounts'},
+    modifiedBy:{type:Types.ObjectId, ref:'UserAccounts'},
+    deletedAt:{type:Date, default:null}
 
 }
 )
 
 employeeSchema.plugin(toJSON);
-export const EmployeeModel = model("Employee", employeeSchema);
+
+
+// Middleware to update deletedAt instead of removing
+employeeSchema.pre("remove", function (next) {
+    this.deletedAt = new Date();
+    this.save();
+    next();
+  });
+export const EmployeeModel = model("Employees", employeeSchema);
 

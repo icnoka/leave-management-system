@@ -8,19 +8,21 @@ import leaveRouter from "./routes/leave_route.js";
 import expressOasGenerator from "@mickeymond/express-oas-generator";
 import cors from "cors";
 import leaveBalanceRouter from "./routes/leaveBalance_route.js";
+import passwordRouter from "./routes/resetPassword_route.js";
+
 
 dbConnection().then(() => {
     definedRoles(); // Ensure roles exist before handling requests
   });
-  ;
+  
 const app = express();
 expressOasGenerator.handleResponses(app, {
     alwaysServeDocs: true,
     tags: [
       "auth",
       "Employee",
-      "LeaveRequests",
-      "LeaveBalance"
+      "LeaveRequest",
+      "leaveBalance"
       
     ],
     mongooseModels: mongoose.modelNames(),
@@ -30,6 +32,7 @@ app.use(cors({ credentials: true, origin: "*" }));
 
 
 app.use("/api/auth",  userRouter);
+app.use("/api/auth", passwordRouter);
 app.use("/api",  employeeRouter);
 app.use("/api",  leaveRouter);
 app.use("/api", leaveBalanceRouter);
@@ -39,8 +42,8 @@ expressOasGenerator.handleRequests();
 app.use((req, res) => res.redirect('/api-docs/'));
 
 
-
-app.listen(process.env.PORT, () => {
-    console.log(`Server is running on port ${process.env.PORT}`)
+let port = process.env.PORT || 2001
+app.listen(port, () => {
+    console.log(`Server is running on port ${port}`)
 })
 

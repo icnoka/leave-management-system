@@ -4,9 +4,9 @@ import { createLeaveBalance, deleteLeaveBalance, getLeaveBalance, updateLeaveBal
 
 const leaveBalanceRouter = Router();
 
-leaveBalanceRouter.post("/leave-balance", isAuthenticated, createLeaveBalance);
-leaveBalanceRouter.patch("/leave-balance/:id", isAuthenticated, updateLeaveBalance);
-leaveBalanceRouter.delete("/leave-balance/:id", isAuthenticated, deleteLeaveBalance);
-leaveBalanceRouter.get('/leave-balance/:employeeId/:year', isAuthenticated, getLeaveBalance);
+leaveBalanceRouter.post("/leaveBalance", isAuthenticated, createLeaveBalance);
+//leaveBalanceRouter.patch("/leave-balance/:id", isAuthenticated, updateLeaveBalance);
+leaveBalanceRouter.delete("/leaveBalance/:id", isAuthenticated, deleteLeaveBalance);
+//leaveBalanceRouter.get('/leave-balance/:employeeId/:year', isAuthenticated, getLeaveBalance);
 
-export default leaveBalanceRouter
+export default leaveBalanceRouter;

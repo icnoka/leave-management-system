@@ -2,36 +2,28 @@ import {Schema, model, Types} from "mongoose";
 import { toJSON } from "@reis/mongoose-to-json";
 
 const leaveSchema = new Schema({
-    employeeId: { type: Types.ObjectId, ref: "Employees", required: true },
+    employeeId: { type: Types.ObjectId, ref: "Employee", required: true },
     leaveType: { type: String, enum: ["Sick", "Annual", "Bereavement", "Maternity", "Paternity", "Personal", "Disability"], required: true },
     daysRequested: {type: Number},
     startDate: { type: Date, required: true },
-    endDate: { 
-        type: Date, required:true, 
-        validate: {
-            validator: function(value) {
-                return value >= this.startDate;
-            },
-            message: "End date must be after or equal to the start date."
-        }
-    },
+    endDate: { type: Date},
     reason: { type: String, required: true },
     year:{type:String},
-    standInPersonId:{type: Types.ObjectId, ref: "UserAccounts"},
+    standInPersonId:{type: Types.ObjectId, ref: "UserAccount"},
     status: { type: String, enum: ["Pending", "Approved", "Rejected"], default: "Pending" },
-    lineManagerId: { type: Types.ObjectId, ref: "UserAccounts" }, // Line manager's approval 
+    lineManagerId: { type: Types.ObjectId, ref: "UserAccount" }, // Line manager's approval 
     isLinemanagerApproved:{type: Boolean, default: false},
     lineManagerApprovedDate: { type: Date },
     lineManagerRejectedDate: { type: Date },
-    hrManagerId: { type: Types.ObjectId, ref: "UserAccounts" }, // Hr manager's approval 
+    hrManagerId: { type: Types.ObjectId, ref: "UserAccount" }, // Hr manager's approval 
     isHrManagerApproved:{type: Boolean, default: false},
     hrManagerApprovedDate: { type: Date },
     hrManagerRejectedDate: { type: Date },
     comments: { type: String, default: null },
     createdDate: { type: Date, default: Date.now },
     modifiedAt: { type: Date, default: Date.now },
-    createdBy: { type: Types.ObjectId, ref: "UserAccounts"}, 
-    modifiedBy: { type: Types.ObjectId, ref: "UserAccounts" },
+    createdBy: { type: Types.ObjectId, ref: "UserAccount"}, 
+    modifiedBy: { type: Types.ObjectId, ref: "UserAccount" },
     deletedAt:{type:Date, default:null}
     
 }
@@ -59,5 +51,5 @@ leaveSchema.pre("remove", function (next) {
     this.save();
     next();
   });
-export const LeaveModel = model("LeaveRequests", leaveSchema);
+export const LeaveModel = model("LeaveRequest", leaveSchema);
 

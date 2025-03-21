@@ -12,22 +12,30 @@ export const isAuthenticated = (req, res, next) => {
 
       const token = authHeader.split(" ")[1]; // Extract token from the bearer
       const decoded = jwt.verify(token, process.env.JWT_PRIVATE_KEY);
-      req.user = { userId: decoded.userId, role: decoded.role };
-     // console.log("Decoded Token:", decoded); // Log the decoded token
+      req.user = { userId: decoded.userId };
+    
       next();
   } catch (error) {
       return res.status(400).json({ message: "Invalid token." });
   }
 };
 
-// Middleware to check user role
-export const hasRole = (...roles) => {
+
+export const authorizeRoles = (allowedRoles) => {
     return (req, res, next) => {
-        if (!req.user || !roles.includes(req.user.role)) {
-            return res.status(403).json({ message: "Access denied. Insufficient permissions." });
+      try {
+        const userRole = req.user.role; // Extracted from JWT middleware
+  
+        if (!allowedRoles.includes(userRole)) {
+          return res.status(403).json({ message: "Access denied. You do not have permission." });
         }
+  
         next();
+      } catch (error) {
+        console.error("Authorization error:", error);
+        res.status(500).json({ message: "Internal Server Error" });
+      }
     };
   };
-
+  
 

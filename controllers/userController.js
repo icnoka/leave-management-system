@@ -1,54 +1,37 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { UserModel } from "../models/user_account.js";
-import { UserRoleModel } from "../models/user_role.js";
-import { RoleModel } from "../models/role.js";
+//import { UserRoleModel } from "../models/user_role.js";
+
 
 
 export const signup = async (req, res, next) => {
   try {
-    const { email, password, roleName } = req.body;
+    const { email, password } = req.body;
 
-    // Convert role to lowercase
-    const roleLower = roleName.toLowerCase();
 
-    // Validate role
-    const validRoles = ["employee", "hr manager", "line manager"];
-    if (!validRoles.includes(roleLower)) {
-      return res.status(400).json({ message: "Invalid role" });
-    }
-
-    // Check if user exists
+    // Check if user already exists
     const existingUser = await UserModel.findOne({ email });
     if (existingUser) return res.status(400).json({ message: "User already exists" });
 
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 12);
 
-    // Create new user
+    // Create new user (without a role)
     const newUser = new UserModel({ email, password: hashedPassword });
     await newUser.save();
-
-    // Retrieve the role ID based on the role name
-    const role = await RoleModel.findOne({ roleName: roleLower }); // Adjust field name if necessary
-    if (!role) {
-      return res.status(400).json({ message: "Invalid role" });
-    }
-
-    // Create user role association
-    const userRole = new UserRoleModel({ userId: newUser._id, roleId: role._id });
-    await userRole.save();
 
     res.status(201).json({
       message: "User registered successfully",
       email: newUser.email,
-      userAccountId: newUser._id,
+      userAccountId: newUser._id
     });
 
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
+
   
 // User login
 export const login = async (req, res, next) => {
@@ -83,12 +66,12 @@ export const login = async (req, res, next) => {
     await user.save();
 
     // Fetch user role
-    const userRole = await UserRoleModel.findOne({ userId: user.id }).populate("roleId");
-    if (!userRole) return res.status(403).json({ message: "No role assigned" });
+    // const userRole = await UserRoleModel.findOne({ userId: user.id }).populate("roleId");
+    // if (!userRole) return res.status(403).json({ message: "No role assigned" });
 
     // Generate JWT token
     const token = jwt.sign(
-      { userId: user.id, role:userRole.roleId.roleName}, 
+      { userId: user.id}, 
       
       process.env.JWT_PRIVATE_KEY,
       { expiresIn: "3h" }
@@ -99,8 +82,7 @@ export const login = async (req, res, next) => {
       message: "Login successful",
       accessToken: token,
       user: {
-        eamil: user.email,
-        role: userRole.roleId.roleName,
+        email: user.email,
       },
     });
 

@@ -19,4 +19,4 @@ roleSchema.pre("remove", function (next) {
   next();
 });
 
-  export const RoleModel = model("Roles", roleSchema);
+  export const RoleModel = model("Role", roleSchema);

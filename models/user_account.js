@@ -23,4 +23,4 @@ userSchema.pre("remove", function (next) {
   this.save();
   next();
 });
-export const UserModel = model("UserAccounts", userSchema);
+export const UserModel = model("UserAccount", userSchema);

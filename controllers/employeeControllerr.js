@@ -1,37 +1,42 @@
 import { EmployeeModel } from "../models/employee.js";
-import { UserModel } from "../models/user_account.js";
 import { LeaveModel } from "../models/leave_request.js";
 import { LeaveBalanceModel } from "../models/leave_balance.js";
+import mongoose from "mongoose";
 
 export const createEmployeeProfile = async (req, res, next) => {
   try {
-     
-    const { firstName, lastName, email, department, mobile, staffID,jobTitle, userAccountId} = req.body;
-    
-  if (!userAccountId) {
-    return res.status(400).json({ message: "userAccountId is required" });
-}
+    const { firstName, lastName, email, department, mobile, staffID, jobTitle, role,address, maritalStatus, gender, userAccountId } = req.body;
 
+    if (!userAccountId) {
+      return res.status(400).json({ message: "userAccountId is required" });
+    }
 
-    // Ensure the user is authenticated and user ID is available
-    const userId = req.user.userId; // Assuming req.user is set by authentication middleware
+    const userId = req.user.userId; 
     if (!userId) {
       return res.status(401).json({ message: "Unauthorized" });
     }
-   // Create employee profile and link to user
-   const newEmployee = await EmployeeModel.create({
-    firstName,
-    lastName,
-    email,
-    department,
-    mobile,
-    staffID,
-    jobTitle,
-    userAccountId,  
-    createdBy: userId,  // Get userId from the token
-    modifiedBy:userId
-  });
+// Convert role and department into ObjectId 
+const roleId = mongoose.isValidObjectId(role) ? role : null;
+const departmentId = mongoose.isValidObjectId(department) ? department : null;
 
+
+
+    const newEmployee = await EmployeeModel.create({
+      firstName,
+      lastName,
+      email,
+      department: departmentId, 
+      mobile,
+      staffID,
+      jobTitle,
+      role: roleId, 
+      address,
+      gender,
+      maritalStatus,
+      userAccountId,
+      createdBy: userId,
+      modifiedBy: userId
+    });
 
     res.status(201).json({ message: "Employee profile created successfully", employee: newEmployee });
 
@@ -39,6 +44,7 @@ export const createEmployeeProfile = async (req, res, next) => {
     next(error);
   }
 };
+
 
 export const updateEmployeeProfile = async (req, res, next) => {
   try {
@@ -48,7 +54,7 @@ export const updateEmployeeProfile = async (req, res, next) => {
     }
 
     // Extract employee ID from request body
-    const { employeeId, firstName, lastName, email, department, mobile, staffID, userAccountId } = req.body;
+    const { employeeId, firstName, lastName, email, department, mobile, staffID, gender, address, maritalStatus, role, dateOfBirth, userAccountId } = req.body;
 
     // Validate required fields
     if (!employeeId) {
@@ -72,10 +78,15 @@ export const updateEmployeeProfile = async (req, res, next) => {
     employee.department = department || employee.department;
     employee.mobile = mobile || employee.mobile;
     employee.staffID = staffID || employee.staffID;
-    employee.userAccountId = userAccountId; // Always update userAccountId
+    employee.address = address || employee.address;
+    employee.dateOfBirth = dateOfBirth || employee.dateOfBirth;
+    employee.gender = gender || employee.gender;
+    employee.maritalStatus = maritalStatus || employee.maritalStatus;
+    employee.role = role || employee.role;
+    employee.userAccountId = userAccountId; 
 
     // Update modifiedBy field
-    employee.modifiedBy = req.user.userId; // Track who modified it
+    employee.modifiedBy = req.user.userId; 
 
     // Save the updated employee profile
     await employee.save();
@@ -86,7 +97,7 @@ export const updateEmployeeProfile = async (req, res, next) => {
   }
 };
 
-export const getEmployeeById = async (req, res, next) => {
+export const getEmployeeById = async (req, res, next) => { 
   try {
     // Extract employee ID from request body
     const { employeeId } = req.body;
@@ -96,13 +107,19 @@ export const getEmployeeById = async (req, res, next) => {
       return res.status(400).json({ message: "Employee ID is required in the request body." });
     }
 
-    // Find the employee by ID
-    const employee = await EmployeeModel.findById(employeeId);
+    // Find the employee by ID and populate department and role details
+    const employee = await EmployeeModel.findById(employeeId)
+    .populate({ path: "department", select: "departmentName -_id" })
+    .populate({ path: "role", select: "roleName -_id" })
+    .lean();
+  
 
     if (!employee) {
       return res.status(404).json({ message: "Employee not found." });
     }
-
+// Modify the response to show only the department and role names
+employee.department = employee.department?.departmentName || null;
+employee.role = employee.role?.roleName || null;
     // Return the employee profile
     res.status(200).json(employee);
   } catch (error) {
@@ -111,10 +128,53 @@ export const getEmployeeById = async (req, res, next) => {
 };
 
 
+export const getEmployees = async (req, res, next) => {
+  try {
+    // Extract filters from query parameters
+    const { firstName, lastName, staffId, dateOfBirth, page = 1, limit = 10 } = req.query;
+
+    let filter = {};
+
+    // Apply filters if provided
+    if (firstName) {
+      
+    filter.firstName = { $regex: firstName, $options: "i" };
+    }
+    
+    // Apply filters if provided
+    if (lastName) {
+      filter.lastName = { $regex: lastName, $options: "i" };
+    } 
+    
+    if (staffId) {
+      filter.staffId = staffId; 
+    }
+    if (dateOfBirth) {
+      filter.dateOfBirth = dateOfBirth; 
+    }
+
+    // Query the database with the filter
+    const employees = await EmployeeModel.find(filter)
+      .skip((page - 1) * limit) // Apply pagination
+      .limit(parseInt(limit)); 
+
+    if (employees.length === 0) {
+      return res.status(404).json({ message: "No employees found." });
+    }
+
+    // Return filtered employees
+    res.status(200).json(employees);
+  } catch (error) {
+    next(error);
+  }
+};
+
+
+
 
 export const getUserWithLeaveDetails = async (req, res, next) => {
   try {
-    const { userAccountId } = req.body; // Get userAccountId from request body
+    const { userAccountId } = req.body; 
 
     if (!userAccountId) {
       return res.status(400).json({ message: "User Account ID is required in the request body." });

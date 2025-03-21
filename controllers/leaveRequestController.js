@@ -6,34 +6,52 @@ import { mailTransport } from "../config/mail.js";
 // Only Employees are allowed to create leave request
 export const createLeaveRequest = async (req, res, next) => {
   try {
-    const { leaveType, startDate, endDate, reason, year, standInPersonId, daysRequested } = req.body;
+    const { leaveType, startDate, reason, year, standInPersonId, daysRequested } = req.body;
 
     // Ensure user is authenticated
     if (!req.user) {
-        return res.status(401).json({ message: "Unauthorized" });
+      return res.status(401).json({ message: "Unauthorized" });
     }
 
     // Check if the user is an employee
-   const employee = await EmployeeModel.findOne({ userAccountId: req.user.userId });
+    const employee = await EmployeeModel.findOne({ userAccountId: req.user.userId });
 
-   if (!employee) {
-    console.log(`No employee found for user ID: ${req.user.userId}`);
-     return res.status(403).json({ message: "Only employees can submit leave requests" });
+    if (!employee) {
+      console.log(`No employee found for user ID: ${req.user.userId}`);
+      return res.status(403).json({ message: "Only employees can submit leave requests" });
     }
-  
+
+    // Validate required fields
+    if (!startDate || !daysRequested) {
+      return res.status(400).json({ message: "Start date and number of days requested are required." });
+    }
+
+    // Convert startDate to a Date object
+    const start = new Date(startDate);
+
+    // Calculate the end date (excluding weekends)
+    let end = new Date(start);
+    let remainingDays = daysRequested;
+
+    while (remainingDays > 0) {
+      end.setDate(end.getDate() + 1); // Move to the next day
+
+      if (end.getDay() !== 6 && end.getDay() !== 0) {
+        remainingDays--;
+      }
+    }
 
     // Check for existing leave requests with the same details
     const existingRequest = await LeaveModel.findOne({
       employeeId: employee._id,
       leaveType,
       startDate,
-      endDate,
+      endDate: end, 
       reason
-      
     });
 
     if (existingRequest) {
-        return res.status(400).json({ message: "Leave request already exists" });
+      return res.status(400).json({ message: "Leave request already exists" });
     }
 
     // Create leave request
@@ -42,20 +60,21 @@ export const createLeaveRequest = async (req, res, next) => {
       leaveType,
       daysRequested,
       startDate,
-      endDate,
+      endDate: end,
       reason,
       year,
       standInPersonId,
-      createdBy: req.user.userId,  // Track who created it
+      createdBy: req.user.userId,
       modifiedBy: req.user.userId
     });
 
-    res.status(201).json({ message: "Leave request submitted successfully", leaveRequest});
+    res.status(201).json({ message: "Leave request submitted successfully", leaveRequest });
 
   } catch (error) {
     next(error);
   }
 };
+
 
 
 // Function to delete a leave request

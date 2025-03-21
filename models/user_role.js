@@ -2,8 +2,8 @@ import {model, Schema, Types} from "mongoose";
 import { toJSON } from "@reis/mongoose-to-json";
 
 const userRoleSchema = new Schema({
-    userId: { type: Types.ObjectId, ref: "UserAccounts", required: true },
-    roleId: { type: Types.ObjectId, ref: "Roles", required: true },
+    userId: { type: Types.ObjectId, ref: "UserAccount", required: true },
+    roleId: { type: Types.ObjectId, ref: "Role", required: true },
     dateCreated: { type: Date, default: Date.now },
     deletedAt:{type:Date, default:null}
   });
@@ -17,6 +17,6 @@ userRoleSchema.pre("remove", function (next) {
   next();
 });
   
-  export const UserRoleModel = model("UserRoles", userRoleSchema);
+  export const UserRoleModel = model("UserRole", userRoleSchema);
 
   

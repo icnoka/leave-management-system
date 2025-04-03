@@ -19,7 +19,7 @@ const employeeSchema = new Schema({
   staffID: { type: String},
   jobTitle: { type: String },
   leaveBalanceId: { type: Types.ObjectId, ref: "LeaveBalance" },
-  userAccountId: { type: Types.ObjectId, ref: "UserAccount", required: true },
+  userAccountId: {type: Types.ObjectId, ref: "UserAccount", required: true  },
   createdBy: { type: Types.ObjectId, ref: "UserAccount" },
   modifiedBy: { type: Types.ObjectId, ref: "UserAccount" },
   createdDate: { type: Date, default: Date.now },

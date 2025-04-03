@@ -9,13 +9,6 @@ const userRoleSchema = new Schema({
   });
 
   userRoleSchema.plugin(toJSON);
-
-// Middleware to update deletedAt instead of removing
-userRoleSchema.pre("remove", function (next) {
-  this.deletedAt = new Date();
-  this.save();
-  next();
-});
   
   export const UserRoleModel = model("UserRole", userRoleSchema);
 

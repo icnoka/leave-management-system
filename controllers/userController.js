@@ -1,18 +1,17 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { UserModel } from "../models/user_account.js";
-//import { UserRoleModel } from "../models/user_role.js";
+import { RoleModel } from "../models/role.js";
+import { UserRoleModel } from "../models/user_role.js";
 
-
-
-export const signup = async (req, res, next) => {
+export const signup1 = async (req, res, next) => {
   try {
     const { email, password } = req.body;
 
-
     // Check if user already exists
     const existingUser = await UserModel.findOne({ email });
-    if (existingUser) return res.status(400).json({ message: "User already exists" });
+    if (existingUser)
+      return res.status(400).json({ message: "User already exists" });
 
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 12);
@@ -24,15 +23,114 @@ export const signup = async (req, res, next) => {
     res.status(201).json({
       message: "User registered successfully",
       email: newUser.email,
-      userAccountId: newUser._id
+      userAccountId: newUser._id,
     });
-
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
 
-  
+export const signup = async (req, res, next) => {
+  try {
+    const { email, password, roleName } = req.body;
+
+    // Convert role to lowercase
+    const roleLower = roleName.toLowerCase();
+
+    // Validate role
+    const validRoles = ["employee", "hr manager", "line manager", "admin"];
+    if (!validRoles.includes(roleLower)) {
+      return res.status(400).json({ message: "Invalid role" });
+    }
+
+    // Check if user exists
+    const existingUser = await UserModel.findOne({ email });
+    if (existingUser)
+      return res.status(400).json({ message: "User already exists" });
+
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 12);
+
+    // Create new user
+    const newUser = new UserModel({ email, password: hashedPassword });
+    await newUser.save();
+
+    // Retrieve the role ID based on the role name
+    const role = await RoleModel.findOne({ roleName: roleLower });
+    if (!role) {
+      return res.status(400).json({ message: "Invalid role" });
+    }
+
+    // Create user role association
+    const userRole = new UserRoleModel({
+      userId: newUser._id,
+      roleId: role._id,
+    });
+    var res1 = await userRole.save();
+
+    res.status(201).json({
+      message: "User registered successfully",
+      email: newUser.email,
+      userAccountId: newUser._id,
+      role: role.roleName,
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// export const signup = async (req, res, next) => {
+
+//   try {
+//     const { email, password, roleName } = req.body;
+//     console.log("Request body:", req.body);
+
+//     // Convert roleName to lowercase for consistency
+//     const roleLower = roleName.toLowerCase();
+
+//     // Validate role
+//     const validRoles = ["employee", "hr manager", "line manager", "admin"];
+//     if (!validRoles.includes(roleLower)) {
+//       return res.status(400).json({ message: "Invalid role" });
+//     }
+
+//     // Check if user already exists
+//     const existingUser = await UserModel.findOne({ email });
+//     if (existingUser) return res.status(400).json({ message: "User already exists" });
+
+//     // Hash password
+//     const hashedPassword = await bcrypt.hash(password, 12);
+
+//     // Retrieve the role ID based on the role name
+//     const role = await RoleModel.findOne({ roleName: roleLower });
+
+//     if (!role) {
+//       return res.status(400).json({ message: "Role not found" });
+//     }
+
+//     // Create new user and attach role ID
+//     const newUser = new UserModel({ email, password: hashedPassword, role: role._id });
+//     await newUser.save();
+
+//     // Create user-role association
+//     const userRole = new UserRoleModel({ userId: newUser._id, roleId: role._id });
+//     await userRole.save();
+
+//     // Populate roleName before returning the response
+//     const userWithRole = await UserModel.findById(newUser._id).populate("role", "roleName");
+
+//     res.status(201).json({
+//       message: "User registered successfully",
+//       email: userWithRole.email,
+//       userAccountId: userWithRole._id,
+//       role: userWithRole.role.roleName,
+//     });
+
+//   } catch (error) {
+//     res.status(500).json({ error: error.message });
+//   }
+// };
+
 // User login
 export const login = async (req, res, next) => {
   try {
@@ -44,7 +142,9 @@ export const login = async (req, res, next) => {
 
     // Check if account is locked
     if (user.isLocked && user.lockedUntil > Date.now()) {
-      return res.status(403).json({ message: `Account locked until ${user.lockedUntil}` });
+      return res
+        .status(403)
+        .json({ message: `Account locked until ${user.lockedUntil}` });
     }
 
     // Verify password
@@ -71,12 +171,11 @@ export const login = async (req, res, next) => {
 
     // Generate JWT token
     const token = jwt.sign(
-      { userId: user.id}, 
-      
+      { userId: user.id },
+
       process.env.JWT_PRIVATE_KEY,
       { expiresIn: "3h" }
     );
-   
 
     res.status(200).json({
       message: "Login successful",
@@ -85,22 +184,19 @@ export const login = async (req, res, next) => {
         email: user.email,
       },
     });
-
   } catch (error) {
     next(error);
   }
 };
 
-
 //function to log a user out
 export const logout = () => {
   // Remove the JWT token from local storage or session storage
-  localStorage.removeItem('token'); // or sessionStorage.removeItem('token');
+  localStorage.removeItem("token"); // or sessionStorage.removeItem('token');
 
-   // Show a logout message
-   alert("You have been logged out successfully.");
-  
-  // Redirect to login page 
-  window.location.href = '/login';
+  // Show a logout message
+  alert("You have been logged out successfully.");
+
+  // Redirect to login page
+  window.location.href = "/login";
 };
- 

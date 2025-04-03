@@ -3,10 +3,10 @@ import "dotenv/config";
 import {dbConnection} from "./config/db.js";
 import mongoose from "mongoose";
 import userRouter from "./routes/user_route.js";
-
 import employeeRouter from "./routes/employee_route.js";
 import leaveRouter from "./routes/leave_route.js";
 import expressOasGenerator from "@mickeymond/express-oas-generator";
+import definedRoles from "./config/db.js";
 import cors from "cors";
 import leaveBalanceRouter from "./routes/leaveBalance_route.js";
 import passwordRouter from "./routes/resetPassword_route.js";
@@ -14,7 +14,10 @@ import roleRouter from "./routes/role_route.js";
 import departmentRouter from "./routes/department_route.js";
 
 
-dbConnection()
+dbConnection().then(() => {
+  definedRoles(); // Ensure roles exist before handling requests
+});
+
 
   
 const app = express();
@@ -33,7 +36,6 @@ expressOasGenerator.handleResponses(app, {
   });
 app.use(express.json());
 app.use(cors({ credentials: true, origin: "*" }));
-
 
 app.use("/api/auth",  userRouter);
 app.use("/api/auth", passwordRouter);

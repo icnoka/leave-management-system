@@ -3,16 +3,16 @@ import { isAuthenticated} from "../middlewares/auth.js";
 import { createEmployeeProfile, getEmployeeById, updateEmployeeProfile, getUserWithLeaveDetails, getEmployees } from "../controllers/employeeControllerr.js";
 
 
-const employeeRouter = Router();
+const staffRouter = Router();
 
-employeeRouter.post('/employee',isAuthenticated, createEmployeeProfile);
-employeeRouter.patch('/employee',isAuthenticated, updateEmployeeProfile);
-employeeRouter.get('/employee',isAuthenticated, getEmployeeById);
-employeeRouter.get('/employee/filter',isAuthenticated, getEmployees);
-employeeRouter.get("/employee/leave-details", isAuthenticated, getUserWithLeaveDetails);
-
-
+staffRouter.post('/staff',isAuthenticated, createEmployeeProfile);
+staffRouter.patch('/staff',isAuthenticated, updateEmployeeProfile);
+staffRouter.get('/staff',isAuthenticated, getEmployeeById);
+staffRouter.get('/staff/filter',isAuthenticated, getEmployees);
+staffRouter.get("/staff/leave-details", isAuthenticated, getUserWithLeaveDetails);
 
 
 
-export default employeeRouter
+
+
+export default staffRouter

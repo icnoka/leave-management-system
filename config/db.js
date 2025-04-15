@@ -3,22 +3,38 @@ import { RoleModel } from "../models/role.js";
 import 'dotenv/config'
 import sql from "mssql";
 
-const mongoUri = process.env.MONGO_URL 
+const mongoUri = process.env.MONGO_URL;
 
-export const dbConnection = async ()=>{
-  await mongoose.connect(mongoUri)
+export const dbConnection = async () => {
+  try {
+    await mongoose.connect(mongoUri, {
+      // useNewUrlParser: true,
+      // useUnifiedTopology: true,
+      tlsAllowInvalidCertificates: true, //Important for self-signed cert
+    });
+
+    console.log("Database is connected successfully");
+  } catch (error) {
+    console.log("Database connection failed:", error.message);
+  }
+};
+
+// const mongoUri = process.env.MONGO_URL 
+
+// export const dbConnection = async ()=>{
+//   await mongoose.connect(mongoUri)
    
-try {
+// try {
 
-console.log('Database is connected successfully')
-} catch (error) {
-    console.log(error)
-}
-}
+// console.log('Database is connected successfully')
+// } catch (error) {
+//     console.log(error)
+// }
+// }
 
 //  const config = {
-//   user: process.env.DB_USER,
-//   password: process.env.DB_PASSWORD,
+//   user: process.env.DB_USERNAME,
+//   password: process.env.DB_PASS,
 //   server: process.env.DB_HOST,
 //   database:process.env.DB_NAME,
 //   options:{

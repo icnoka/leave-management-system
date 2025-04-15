@@ -12,6 +12,9 @@ import leaveBalanceRouter from "./routes/leaveBalance_route.js";
 import passwordRouter from "./routes/resetPassword_route.js";
 import roleRouter from "./routes/role_route.js";
 import departmentRouter from "./routes/department_route.js";
+import demoRouter from "./routes/demo_route.js";
+import subscribeRouter from "./routes/subscribe_route.js";
+import contactUsRouter from "./routes/contactUs_route.js";
 
 
 dbConnection().then(() => {
@@ -25,11 +28,14 @@ expressOasGenerator.handleResponses(app, {
     alwaysServeDocs: true,
     tags: [
       "auth",
-      "Employee",
+      "Staff",
       "LeaveRequest",
       "leaveBalance",
       "Role",
-      "Department"
+      "Department",
+      "Demo",
+      "Subscribe",
+      "ContactUs"
       
     ],
     mongooseModels: mongoose.modelNames(),
@@ -44,6 +50,9 @@ app.use("/api",  leaveRouter);
 app.use("/api", leaveBalanceRouter);
 app.use("/api", roleRouter);
 app.use("/api", departmentRouter);
+app.use("/api", demoRouter);
+app.use("/api", subscribeRouter);
+app.use("/api", contactUsRouter);
 
 
 expressOasGenerator.handleRequests();

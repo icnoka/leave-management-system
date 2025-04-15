@@ -63,7 +63,7 @@ export const createDepartment = async (req, res) => {
         return res.status(400).json({ message: "Department ID is required" });
       }
   
-      const department = await DepartmentModel.findByIdAndUpdate(
+      const department = await DepartmentModel.findByIdAndDelete(
         departmentId,
         { deletedAt: new Date(), isActive: false },
         { new: true }

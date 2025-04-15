@@ -29,4 +29,4 @@ const employeeSchema = new Schema({
 
 employeeSchema.plugin(toJSON);
 
-export const EmployeeModel = model("Employee", employeeSchema);
+export const EmployeeModel = model("Staff", employeeSchema);

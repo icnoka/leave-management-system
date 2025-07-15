@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import { RoleModel } from "../models/role.js";
 import 'dotenv/config'
-import sql from "mssql";
+//import sql from "mssql";
 
 const mongoUri = process.env.MONGO_URL;
 

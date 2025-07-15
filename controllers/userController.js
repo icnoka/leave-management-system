@@ -189,14 +189,22 @@ export const login = async (req, res, next) => {
   }
 };
 
-//function to log a user out
-export const logout = () => {
-  // Remove the JWT token from local storage or session storage
-  localStorage.removeItem("token"); // or sessionStorage.removeItem('token');
-
-  // Show a logout message
-  alert("You have been logged out successfully.");
-
-  // Redirect to login page
-  window.location.href = "/login";
+export const logout = async (req, res) => {
+  try {
+    res.status(200).json({ message: "User logged out successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Logout failed", error: error.message });
+  }
 };
+
+//function to log a user out
+// export const logout = () => {
+//   // Remove the JWT token from local storage or session storage
+//   localStorage.removeItem("token"); // or sessionStorage.removeItem('token');
+
+//   // Show a logout message
+//   alert("You have been logged out successfully.");
+
+//   // Redirect to login page
+//   window.location.href = "/login";
+// };

@@ -2,10 +2,12 @@ import express from "express";
 import "dotenv/config";
 import {dbConnection} from "./config/db.js";
 import mongoose from "mongoose";
+import swaggerUi from "swagger-ui-express";
+ import swaggerJsdoc from "swagger-jsdoc";
 import userRouter from "./routes/user_route.js";
 import employeeRouter from "./routes/employee_route.js";
 import leaveRouter from "./routes/leave_route.js";
-import expressOasGenerator from "@mickeymond/express-oas-generator";
+//import expressOasGenerator from "@mickeymond/express-oas-generator";
 import definedRoles from "./config/db.js";
 import cors from "cors";
 import leaveBalanceRouter from "./routes/leaveBalance_route.js";
@@ -22,24 +24,41 @@ dbConnection().then(() => {
 });
 
 
-  
 const app = express();
-expressOasGenerator.handleResponses(app, {
-    alwaysServeDocs: true,
-    tags: [
-      "auth",
-      "Staff",
-      "LeaveRequest",
-      "leaveBalance",
-      "Role",
-      "Department",
-      "Demo",
-      "Subscribe",
-      "ContactUs"
+const options = {
+  definition: {
+    openapi: "3.0.0",
+    info: {
+      title: "Your API",
+      version: "1.0.0",
+      description: "API documentation for your app",
+    },
+  },
+  apis: ["./routes/*.js"], // Adjust path to where your route files are
+};
+
+// Generate Swagger specs
+const swaggerSpec = swaggerJsdoc(options);
+
+// Serve Swagger docs
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
+// expressOasGenerator.handleResponses(app, {
+//     alwaysServeDocs: true,
+//     tags: [
+//       "auth",
+//       "Staff",
+//       "LeaveRequest",
+//       "leaveBalance",
+//       "Role",
+//       "Department",
+//       "Demo",
+//       "Subscribe",
+//       "ContactUs"
       
-    ],
-    mongooseModels: mongoose.modelNames(),
-  });
+//     ],
+//     mongooseModels: mongoose.modelNames(),
+//   });
 app.use(express.json());
 app.use(cors({ credentials: true, origin: "*" }));
 
@@ -55,8 +74,8 @@ app.use("/api", subscribeRouter);
 app.use("/api", contactUsRouter);
 
 
-expressOasGenerator.handleRequests();
-app.use((req, res) => res.redirect('/api-docs/'));
+// expressOasGenerator.handleRequests();
+// app.use((req, res) => res.redirect('/api-docs/'));
 
 
 let port = process.env.PORT || 2001
